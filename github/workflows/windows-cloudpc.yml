@@ -1,0 +1,31 @@
+name: Windows Cloud PC - Anydesk
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Start Windows Cloud PC
+    runs-on: windows-latest
+    timeout-minutes: 360  # 6 hours max
+
+    steps:
+      - name: Download and Install AnyDesk
+        run: |
+          Invoke-WebRequest -Uri "https://download.anydesk.com/AnyDesk.exe" -OutFile "AnyDesk.exe"
+          Start-Process ".\AnyDesk.exe" -ArgumentList "/silent" -Wait
+
+      - name: Set AnyDesk Password (ianmax256)
+        run: |
+          $Password = 'ianmax256'
+          $SecurePassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
+          $EncodedPassword = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($Password))
+          New-ItemProperty -Path "HKLM:\SOFTWARE\AnyDesk" -Name "Password" -PropertyType String -Value $EncodedPassword -Force
+        shell: powershell
+
+      - name: Launch AnyDesk
+        run: Start-Process "C:\Program Files (x86)\AnyDesk\AnyDesk.exe"
+
+      - name: Keep session alive
+        run: Start-Sleep -Seconds 14400  # 4 hours
+        
